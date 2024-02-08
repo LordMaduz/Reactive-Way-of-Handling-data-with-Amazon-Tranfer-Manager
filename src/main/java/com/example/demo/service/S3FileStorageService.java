@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import org.springframework.http.codec.multipart.FilePart;
+import java.io.IOException;
 import java.nio.file.Path;
 
 public interface S3FileStorageService {
@@ -8,6 +9,8 @@ public interface S3FileStorageService {
 
 
     void uploadObjectToS3(final FilePart filePart, final String path);
+
+    void uploadStream(final boolean isCompressionEnabled) throws InterruptedException, IOException;
 
     void downloadObjectFromS3(final String key);
 

@@ -8,6 +8,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+import java.io.IOException;
 import java.nio.file.Path;
 
 @RequiredArgsConstructor
@@ -28,6 +29,12 @@ public class S3TransferManagerController {
                 });
 
 
+    }
+
+    @PostMapping(value = "/upload-stream/{compressionEnabled}")
+    public Mono<String> uploadStream(@PathVariable("compressionEnabled") boolean compressionEnabled) throws InterruptedException, IOException {
+        fileStorageService.uploadStream(compressionEnabled);
+        return Mono.just("SUCCESS");
     }
 
     @GetMapping(path = "download-transfer-manager/{fileKey}")
