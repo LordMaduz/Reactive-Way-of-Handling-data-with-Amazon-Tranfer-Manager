@@ -1,5 +1,5 @@
 # Reactive Data processing with Amazon S3 Transfer Manager
-This repo demonstrates thes usage of Amazon S3 Transfer Manager in the AWS SDK for Java 2.x. This implementation is for two use cases;
+This repo demonstrates the usage of Amazon S3 Transfer Manager in the AWS SDK for Java 2.x. This implementation is for two use cases;
 * Asynchronous Parallel File Transfers with S3 Transfer Manager
 * Streaming data to Amazon S3 Asynchronously.
 asynchronous and parallel file transfers and data streaming.
