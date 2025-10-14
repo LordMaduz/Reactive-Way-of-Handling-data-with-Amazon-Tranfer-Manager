@@ -159,6 +159,155 @@ Request:
 ```bash
 curl -X POST http://localhost:8080/files/download-directory/backups/restore-dir
 ```
+## Key Features
+
+### S3 Transfer Manager Configuration
+```java
+@Configuration
+@RequiredArgsConstructor
+public class AwsS3Config {
+
+    @Bean
+    public S3AsyncClient s3AsyncClientCrt(AwsCredentialsProvider credentials) {
+        return S3AsyncClient.crtBuilder()
+            .minimumPartSizeInBytes(s3ConfigProperties.getMultipartMinPartSize())
+            .credentialsProvider(credentials)
+            .build();
+    }
+
+    @Bean
+    public S3TransferManager transferManager(S3AsyncClient s3AsyncClient) {
+        return S3TransferManager.builder()
+            .s3Client(s3AsyncClient)
+            .build();
+    }
+}
+```
+
+### File Upload with Progress Tracking
+```java
+public void uploadObjectToS3(FilePart filePart, String path) {
+   
+    PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+        .bucket(s3ConfigProperties.getS3BucketName())
+        .key(key)
+        .build();
+
+    filePart.transferTo(tempFile).then(
+        Mono.fromCallable(() -> {
+            UploadFileRequest uploadFileRequest = UploadFileRequest.builder()
+                .putObjectRequest(putObjectRequest)
+                .source(tempFile)
+                .addTransferListener(LoggingTransferListener.create())
+                .build();
+
+            FileUpload fileUpload = transferManager.uploadFile(uploadFileRequest);
+            
+            Mono.fromFuture(fileUpload.completionFuture())
+                .subscribe(completed -> {
+                    log.info("File uploaded: {}", completed.response().eTag());
+                    tempFile.deleteOnExit();
+                });
+            
+            return true;
+        })
+    ).subscribe();
+}
+```
+
+### Streaming with Flux Publisher
+```java
+private void streamWithPublisher() throws InterruptedException {
+    FluxSinkImplementation fluxSink = new FluxSinkImplementation<>();
+    
+    Flux streamFlux = Flux
+        .create(fluxSink)
+        .map(ByteBuffer::wrap)
+        .doOnComplete(() -> log.info("Stream completed"));
+
+    PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+        .bucket(s3ConfigProperties.getS3BucketName())
+        .key("stream-directory/data.txt")
+        .build();
+
+    UploadRequest uploadRequest = UploadRequest.builder()
+        .putObjectRequest(putObjectRequest)
+        .requestBody(AsyncRequestBody.fromPublisher(streamFlux))
+        .addTransferListener(new LoggingTransferListener(5_242_880L))
+        .build();
+
+    Upload upload = transferManager.upload(uploadRequest);
+
+    // Wait for sink to be ready
+    fluxSink.getCountDownLatch().await();
+
+    // Stream data
+    for (int i = 0; i < 1_000_000; i++) {
+        fluxSink.publishEvent(DATA.getBytes(StandardCharsets.UTF_8));
+    }
+    fluxSink.complete();
+
+    Mono.fromFuture(upload.completionFuture())
+        .subscribe(completed -> 
+            log.info("Streamed: {}", completed.response().eTag()));
+}
+```
+
+### Streaming with Compression
+```java
+private void streamWithBlockingOutputStream() throws IOException {
+    BlockingOutputStreamAsyncRequestBody requestBody = 
+        AsyncRequestBody.forBlockingOutputStream(null);
+
+    UploadRequest uploadRequest = UploadRequest.builder()
+        .putObjectRequest(putObjectRequest)
+        .requestBody(requestBody)
+        .addTransferListener(new LoggingTransferListener(200L))
+        .build();
+
+    Upload upload = transferManager.upload(uploadRequest);
+    
+    GZIPOutputStream gzipStream = 
+        new GZIPOutputStream(requestBody.outputStream());
+
+    Mono.fromRunnable(() -> {
+        try {
+            for (int i = 0; i < 10_000_000; i++) {
+                gzipStream.write(DATA.getBytes(StandardCharsets.UTF_8));
+            }
+            gzipStream.flush();
+            gzipStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Mono.fromFuture(upload.completionFuture())
+            .subscribe(completed -> 
+                log.info("Compressed stream uploaded: {}", completed.response().eTag()));
+    }).subscribeOn(Schedulers.boundedElastic()).subscribe();
+}
+```
+
+### Directory Upload
+```java
+public void uploadDirectoryToS3(Path path, String bucketPrefix) {
+    UploadDirectoryRequest uploadRequest = UploadDirectoryRequest.builder()
+        .source(path)
+        .s3Delimiter("/")
+        .s3Prefix(bucketPrefix + "/")
+        .uploadFileRequestTransformer(request -> 
+            request.addTransferListener(LoggingTransferListener.create()))
+        .bucket(s3ConfigProperties.getS3BucketName())
+        .build();
+
+    DirectoryUpload directoryUpload = transferManager.uploadDirectory(uploadRequest);
+
+    Mono.fromFuture(directoryUpload.completionFuture())
+        .subscribe(completed -> 
+            completed.failedTransfers().forEach(failed -> 
+                log.warn("Failed to upload: {}", failed.toString())));
+}
+```
 
 ## Learn More
 
