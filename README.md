@@ -19,6 +19,7 @@ A production-ready Spring Boot application demonstrating advanced AWS S3 operati
 ---
 
 ## Architecture
+<img width="2602" height="1901" alt="Mermaid Chart - Create complex, visual diagrams with text -2025-10-14-115827" src="https://github.com/user-attachments/assets/2b9bd77c-1962-424e-8b59-025605f6f6f6" />
 
 ---
 
@@ -26,8 +27,8 @@ A production-ready Spring Boot application demonstrating advanced AWS S3 operati
 ### Multipart Upload Flow
 <img width="1481" height="1802" alt="Mermaid Chart - Create complex, visual diagrams with text -2025-10-14-115618" src="https://github.com/user-attachments/assets/3449cc26-7639-4eef-b2e0-8b06845dc0e3" />
 
-
 ## Streaming Flow
+<img width="1751" height="1472" alt="Mermaid Chart - Create complex, visual diagrams with text -2025-10-14-115741" src="https://github.com/user-attachments/assets/b3a865a0-c8fa-4b36-9165-7c3f5dc6539c" />
 
 ## Tech Stack
 
@@ -159,10 +160,22 @@ Request:
 curl -X POST http://localhost:8080/files/download-directory/backups/restore-dir
 ```
 
-#### Please take a look at the below articles for a detail explanation of the above intergrations.
+## Learn More
 
-* [Asynchronous Parallel File Transfers with S3 Transfer Manager](https://levelup.gitconnected.com/asynchronous-parallel-file-transfers-using-amazon-s3-transfer-manager-0da7fa5ff83f?sk=eb5b28271241a40e2c90a1c2f92b12ab)
-* [Streaming data to Amazon S3 Asynchronously](https://levelup.gitconnected.com/asynchronous-streaming-of-data-to-amazon-s3-c4f8e066fa9b?sk=f25af74e909da088226f3be543741f97)
+For comprehensive guides on AWS S3 Transfer Manager and advanced streaming techniques:
+
+### Complete Implementation Series
+
+**AWS S3 Transfer Optimization Tutorials:**
+
+#### 1. Parallel File Transfers
+
+**[Asynchronous Parallel File Transfers with S3 Transfer Manager](https://levelup.gitconnected.com/asynchronous-parallel-file-transfers-using-amazon-s3-transfer-manager-0da7fa5ff83f?sk=eb5b28271241a40e2c90a1c2f92b12ab)**
+
+
+#### 2. Streaming Data to S3
+
+**[Streaming Data to Amazon S3 Asynchronously](https://levelup.gitconnected.com/asynchronous-streaming-of-data-to-amazon-s3-c4f8e066fa9b?sk=f25af74e909da088226f3be543741f97)**
 
   
   
